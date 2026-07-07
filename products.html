@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}Products - FitHub{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Fitness Products</h1>
+                    <p class="text-gray-600 mt-1">Premium supplements and accessories for your fitness goals</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('customer_cart') }}" class="text-gray-600 hover:text-gray-900 transition-colors relative">
+                        <i class="fas fa-shopping-cart text-xl"></i>
+                        {% if session.cart and session.cart.values() | sum > 0 %}
+                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                {{ session.cart.values() | sum }}
+                            </span>
+                        {% endif %}
+                    </a>
+                    <a href="{{ url_for('customer_dashboard') }}" class="text-gray-600 hover:text-gray-900 transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Filters -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm font-medium text-gray-700">Category:</label>
+                    <select id="categoryFilter" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="">All Products</option>
+                        <option value="supplement">Supplements</option>
+                        <option value="accessory">Accessories</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm font-medium text-gray-700">Sort by:</label>
+                    <select id="sortFilter" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="name">Name</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                    </select>
+                </div>
+                <button onclick="applyFilters()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                    Apply Filters
+                </button>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        {% if products %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="productsGrid">
+            {% for product in products %}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105 product-card" 
+                 data-category="{{ product.category }}" 
+                 data-price="{{ product.price }}"
+                 data-name="{{ product.name }}">
+                <!-- Product Image -->
+                <div class="h-48 bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center relative">
+                    {% if product.image_filename %}
+                        <img src="{{ url_for('static', filename='uploads/' + product.image_filename) }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+                    {% else %}
+                        <i class="fas fa-box text-6xl text-white"></i>
+                    {% endif %}
+                    <div class="absolute top-4 left-4">
+                        <span class="bg-{{ 'green' if product.category == 'supplement' else 'blue' }}-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                            {{ product.category.title() }}
+                        </span>
+                    </div>
+                    {% if product.stock_quantity < 10 %}
+                    <div class="absolute top-4 right-4">
+                        <span class="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                            Low Stock
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Product Info -->
+                <div class="p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">{{ product.name }}</h3>
+                    <p class="text-sm text-gray-600 mb-3">{{ product.description[:100] }}...</p>
+                    
+                    <!-- Seller Info -->
+                    <div class="flex items-center text-xs text-gray-500 mb-3">
+                        <i class="fas fa-store mr-1"></i>
+                        <span>{{ product.seller.business_name }}</span>
+                    </div>
+
+                    <!-- Price and Stock -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <span class="text-2xl font-bold text-green-600">{{ product.price | currency }}</span>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-gray-500">Stock: {{ product.stock_quantity }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex space-x-2">
+                        <button onclick="showProductDetails({{ product.id }})" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-colors text-sm">
+                            <i class="fas fa-info-circle mr-1"></i>Details
+                        </button>
+                        {% if product.stock_quantity > 0 %}
+                            <a href="{{ url_for('add_to_cart', product_id=product.id) }}" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg transition-colors text-sm text-center">
+                                <i class="fas fa-cart-plus mr-1"></i>Add to Cart
+                            </a>
+                        {% else %}
+                            <button disabled class="flex-1 bg-gray-300 text-gray-500 px-3 py-2 rounded-lg text-sm cursor-not-allowed">
+                                Out of Stock
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <i class="fas fa-box text-4xl text-gray-400 mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No products available</h3>
+            <p class="text-gray-600">Check back soon for new products.</p>
+        </div>
+        {% endif %}
+
+        <!-- Categories Section -->
+        <div class="bg-white rounded-xl shadow-lg p-8 mt-12">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Product Categories</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="text-center p-6 bg-green-50 rounded-xl">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-pills text-2xl text-green-600"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Supplements</h3>
+                    <p class="text-gray-600">High-quality protein powders, vitamins, and nutritional supplements to support your fitness goals</p>
+                    <p class="text-sm text-green-600 mt-2 font-medium">{{ products | selectattr('category', 'equalto', 'supplement') | list | length }} products available</p>
+                </div>
+                <div class="text-center p-6 bg-blue-50 rounded-xl">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-dumbbell text-2xl text-blue-600"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Accessories</h3>
+                    <p class="text-gray-600">Essential fitness gear including workout equipment, yoga mats, and training accessories</p>
+                    <p class="text-sm text-blue-600 mt-2 font-medium">{{ products | selectattr('category', 'equalto', 'accessory') | list | length }} products available</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product Details Modal -->
+<div id="productModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Product Details</h3>
+                    <button onclick="hideProductDetails()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="productDetailsContent">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Store product data for modal and filtering
+const productsData = {
+    {% for product in products %}
+    {{ product.id }}: {
+        name: "{{ product.name }}",
+        description: "{{ product.description }}",
+        price: {{ product.price }},
+        category: "{{ product.category }}",
+        stockQuantity: {{ product.stock_quantity }},
+        sellerName: "{{ product.seller.business_name }}",
+        imageFilename: "{{ product.image_filename or '' }}"
+    },
+    {% endfor %}
+};
+
+function showProductDetails(productId) {
+    const product = productsData[productId];
+    if (!product) return;
+
+    const content = `
+        <div class="space-y-6">
+            ${product.imageFilename ? 
+                `<div class="w-full h-64 rounded-lg overflow-hidden">
+                    <img src="/static/uploads/${product.imageFilename}" alt="${product.name}" class="w-full h-full object-cover">
+                </div>` : 
+                `<div class="w-full h-64 bg-gradient-to-r from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-box text-6xl text-white"></i>
+                </div>`
+            }
+            
+            <div>
+                <h4 class="text-2xl font-bold text-gray-900 mb-2">${product.name}</h4>
+                <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full ${product.category === 'supplement' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}">
+                    ${product.category.charAt(0).toUpperCase() + product.category.slice(1)}
+                </span>
+            </div>
+
+            <div>
+                <p class="text-gray-600">${product.description}</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                    <p class="text-2xl font-bold text-green-600">PKR ${product.price.toLocaleString()}.00</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Stock Available</label>
+                    <p class="text-lg text-gray-900">${product.stockQuantity} units</p>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sold by</label>
+                    <p class="text-sm text-gray-900">${product.sellerName}</p>
+                </div>
+            </div>
+
+            <div class="flex space-x-4 pt-4">
+                ${product.stockQuantity > 0 ? 
+                    `<a href="/add_to_cart/${productId}" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-center">
+                        <i class="fas fa-cart-plus mr-2"></i>Add to Cart
+                    </a>` :
+                    `<button disabled class="flex-1 bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed">
+                        Out of Stock
+                    </button>`
+                }
+            </div>
+        </div>
+    `;
+
+    document.getElementById('productDetailsContent').innerHTML = content;
+    document.getElementById('productModal').classList.remove('hidden');
+}
+
+function hideProductDetails() {
+    document.getElementById('productModal').classList.add('hidden');
+}
+
+function applyFilters() {
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const sortFilter = document.getElementById('sortFilter').value;
+    const cards = Array.from(document.querySelectorAll('.product-card'));
+
+    // Filter by category
+    cards.forEach(card => {
+        const category = card.getAttribute('data-category');
+        if (categoryFilter === '' || category === categoryFilter) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Sort visible cards
+    const visibleCards = cards.filter(card => card.style.display !== 'none');
+    
+    visibleCards.sort((a, b) => {
+        if (sortFilter === 'name') {
+            return a.getAttribute('data-name').localeCompare(b.getAttribute('data-name'));
+        } else if (sortFilter === 'price-low') {
+            return parseFloat(a.getAttribute('data-price')) - parseFloat(b.getAttribute('data-price'));
+        } else if (sortFilter === 'price-high') {
+            return parseFloat(b.getAttribute('data-price')) - parseFloat(a.getAttribute('data-price'));
+        }
+        return 0;
+    });
+
+    // Reorder in DOM
+    const grid = document.getElementById('productsGrid');
+    visibleCards.forEach(card => grid.appendChild(card));
+}
+
+// Auto-apply filters on change
+document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+document.getElementById('sortFilter').addEventListener('change', applyFilters);
+</script>
+{% endblock %}

@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Subscriptions - FitHub{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 animate-fade-in">Membership Plans</h1>
+                    <p class="text-gray-600 mt-1">Choose a plan and get access to all gyms</p>
+                </div>
+                <a href="{{ url_for('customer_dashboard') }}"
+                    class="text-gray-600 hover:text-gray-900 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Current Subscription -->
+        {% if current_user.is_authenticated and current_user.has_active_subscription() %}
+        <div class="bg-green-100 border-l-4 border-green-500 p-6 mb-8 rounded-lg animate-slide-up">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-check-circle text-green-500 text-2xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-green-800">Active Subscription</h3>
+                    <p class="text-green-700">You have access to all gyms in our network!</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Subscription Plans -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            {% for plan in plans %}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition-all duration-300 animate-fade-in-up"
+                style="animation-delay: {{ loop.index0 * 100 }}ms">
+                {% if plan.name == '6-Month' %}
+                <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-center py-2">
+                    <span class="text-sm font-semibold">MOST POPULAR</span>
+                </div>
+                {% endif %}
+
+                <div class="p-8">
+                    <div class="text-center">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ plan.name }}</h3>
+                        <div class="mb-4">
+                            <span class="text-4xl font-bold text-green-600">PKR {{ "%.0f"|format(plan.price) }}</span>
+                            <span class="text-gray-600">/{{ plan.duration_months }} month{{ 's' if plan.duration_months
+                                > 1 else '' }}</span>
+                        </div>
+                        <p class="text-gray-600 mb-6">{{ plan.description }}</p>
+                    </div>
+
+                    <!-- Features -->
+                    <ul class="space-y-3 mb-8">
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Access to all partner gyms</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Unlimited gym visits</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span class="text-gray-700">Trainer booking access</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span class="text-gray-700">24/7 customer support</span>
+                        </li>
+                        {% if plan.duration_months >= 6 %}
+                        <li class="flex items-center">
+                            <i class="fas fa-star text-yellow-500 mr-3"></i>
+                            <span class="text-gray-700">Priority booking</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+
+                    <!-- Subscribe Button -->
+                    {% if current_user.is_authenticated %}
+                    <form method="POST" action="{{ url_for('customer_subscribe', plan_id=plan.id) }}">
+                        <a href="{{ url_for('customer_subscribe', plan_id=plan.id) }}"
+                            class="btn bg-blue-600 text-white px-4 py-2 rounded">
+                            Subscribe Now
+                        </a>
+                    </form>
+                    {% else %}
+                    <a href="{{ url_for('login') }}"
+                        class="block w-full bg-gradient-to-r from-green-600 to-blue-600 text-center hover:from-green-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105">
+                        Login to Subscribe
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Benefits Section -->
+        <div class="bg-white rounded-xl shadow-lg p-8 animate-fade-in">
+            <h2 class="text-2xl font-bold text-gray-900 mb-8 text-center">Why Choose FitHub?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-dumbbell text-2xl text-blue-600"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-2">Premium Equipment</h3>
+                    <p class="text-gray-600 text-sm">State-of-the-art fitness equipment at all partner gyms</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-users text-2xl text-green-600"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-2">Expert Trainers</h3>
+                    <p class="text-gray-600 text-sm">Certified trainers available for personalized sessions</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-map-marked-alt text-2xl text-purple-600"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-2">Multiple Locations</h3>
+                    <p class="text-gray-600 text-sm">Access to gyms across the city with one membership</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-clock text-2xl text-orange-600"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-2">Flexible Hours</h3>
+                    <p class="text-gray-600 text-sm">24/7 access to participating fitness centers</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes fade-in {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes slide-up {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes fade-in-up {
+        from {
+            transform: translateY(30px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .animate-fade-in {
+        animation: fade-in 0.6s ease-out;
+    }
+
+    .animate-slide-up {
+        animation: slide-up 0.6s ease-out;
+    }
+
+    .animate-fade-in-up {
+        animation: fade-in-up 0.8s ease-out forwards;
+    }
+</style>
+{% endblock %}

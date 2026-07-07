@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Sellers - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Manage Sellers</h1>
+                    <p class="text-gray-600 mt-1">Approve and manage seller accounts</p>
+                </div>
+                <a href="{{ url_for('admin_dashboard') }}" class="text-gray-600 hover:text-gray-900 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Sellers List -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">All Sellers ({{ sellers|length }})</h2>
+            </div>
+
+            {% if sellers %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seller</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Business</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for seller in sellers %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-12 w-12">
+                                        <div class="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-store text-purple-600"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ seller.user.full_name }}</div>
+                                        <div class="text-sm text-gray-500">{{ seller.user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900">{{ seller.business_name }}</div>
+                                <div class="text-sm text-gray-500">{{ seller.business_address[:50] }}...</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ seller.user.phone }}</div>
+                                <div class="text-sm text-gray-500">{{ seller.business_phone }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if seller.is_approved %}
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                        Approved
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        Pending
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ seller.created_at.strftime('%b %d, %Y') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-2">
+                                    {% if not seller.is_approved %}
+                                        <a href="{{ url_for('admin_approve_seller', id=seller.id) }}" 
+                                           class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs transition-colors">
+                                            Approve
+                                        </a>
+                                    {% endif %}
+                                    <button onclick="showSellerDetails({{ seller.id }})" 
+                                            class="text-blue-600 hover:text-blue-900 transition-colors">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button onclick="showSellerProducts({{ seller.id }})" 
+                                            class="text-purple-600 hover:text-purple-900 transition-colors">
+                                        <i class="fas fa-box"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <i class="fas fa-store text-4xl text-gray-400 mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No sellers found</h3>
+                <p class="text-gray-600">Sellers will appear here when they register on the platform.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Seller Details Modal -->
+<div id="sellerModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Seller Details</h3>
+                    <button onclick="hideSellerDetails()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="sellerDetailsContent">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Seller Products Modal -->
+<div id="sellerProductsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Seller Products</h3>
+                    <button onclick="hideSellerProducts()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="sellerProductsContent">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Store seller data for modals
+const sellersData = {
+    {% for seller in sellers %}
+    {{ seller.id }}: {
+        name: "{{ seller.user.full_name }}",
+        email: "{{ seller.user.email }}",
+        phone: "{{ seller.user.phone }}",
+        businessName: "{{ seller.business_name }}",
+        businessAddress: "{{ seller.business_address }}",
+        businessPhone: "{{ seller.business_phone }}",
+        approved: {{ seller.is_approved | tojson }},
+        joinDate: "{{ seller.created_at.strftime('%b %d, %Y') }}",
+        products: [
+            {% for product in seller.products %}
+            {
+                name: "{{ product.name }}",
+                price: "{{ product.price | currency }}",
+                category: "{{ product.category.title() }}",
+                stock: {{ product.stock_quantity }},
+                active: {{ product.is_active | tojson }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]
+    },
+    {% endfor %}
+};
+
+function showSellerDetails(sellerId) {
+    const seller = sellersData[sellerId];
+    if (!seller) return;
+
+    const content = `
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                <p class="text-sm text-gray-900">${seller.name}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Email</label>
+                <p class="text-sm text-gray-900">${seller.email}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Phone</label>
+                <p class="text-sm text-gray-900">${seller.phone}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Business Name</label>
+                <p class="text-sm text-gray-900">${seller.businessName}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Business Address</label>
+                <p class="text-sm text-gray-900">${seller.businessAddress}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Business Phone</label>
+                <p class="text-sm text-gray-900">${seller.businessPhone}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Join Date</label>
+                <p class="text-sm text-gray-900">${seller.joinDate}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Status</label>
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${seller.approved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                    ${seller.approved ? 'Approved' : 'Pending'}
+                </span>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('sellerDetailsContent').innerHTML = content;
+    document.getElementById('sellerModal').classList.remove('hidden');
+}
+
+function hideSellerDetails() {
+    document.getElementById('sellerModal').classList.add('hidden');
+}
+
+function showSellerProducts(sellerId) {
+    const seller = sellersData[sellerId];
+    if (!seller) return;
+
+    let content = `
+        <div class="mb-4">
+            <h4 class="font-medium text-gray-900">${seller.businessName} Products</h4>
+            <p class="text-sm text-gray-600">${seller.products.length} product(s)</p>
+        </div>
+    `;
+
+    if (seller.products.length > 0) {
+        content += `
+            <div class="space-y-3 max-h-64 overflow-y-auto">
+                ${seller.products.map(product => `
+                    <div class="border border-gray-200 rounded-lg p-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <h5 class="font-medium text-gray-900">${product.name}</h5>
+                            <span class="text-sm font-semibold text-green-600">${product.price}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm text-gray-600">
+                            <span class="bg-gray-100 px-2 py-1 rounded">${product.category}</span>
+                            <span>Stock: ${product.stock}</span>
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${product.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                ${product.active ? 'Active' : 'Inactive'}
+                            </span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } else {
+        content += `
+            <div class="text-center py-8">
+                <i class="fas fa-box text-2xl text-gray-400 mb-2"></i>
+                <p class="text-gray-600">No products added yet</p>
+            </div>
+        `;
+    }
+
+    document.getElementById('sellerProductsContent').innerHTML = content;
+    document.getElementById('sellerProductsModal').classList.remove('hidden');
+}
+
+function hideSellerProducts() {
+    document.getElementById('sellerProductsModal').classList.add('hidden');
+}
+</script>
+{% endblock %}

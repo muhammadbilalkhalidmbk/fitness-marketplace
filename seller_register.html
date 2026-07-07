@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Seller Registration - FitHub{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-store text-3xl text-purple-600"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-gray-900">Seller Registration</h2>
+                <p class="text-gray-600 mt-2">Start selling fitness products to our community</p>
+            </div>
+
+            <form method="POST" class="space-y-6">
+                {{ form.hidden_tag() }}
+                
+                <!-- Personal Information -->
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            {{ form.username.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                            {{ form.username(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200") }}
+                            {% if form.username.errors %}
+                                <div class="text-red-500 text-sm mt-1">
+                                    {% for error in form.username.errors %}<p>{{ error }}</p>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            {{ form.email.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                            {{ form.email(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200") }}
+                            {% if form.email.errors %}
+                                <div class="text-red-500 text-sm mt-1">
+                                    {% for error in form.email.errors %}<p>{{ error }}</p>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            {{ form.full_name.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                            {{ form.full_name(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200") }}
+                            {% if form.full_name.errors %}
+                                <div class="text-red-500 text-sm mt-1">
+                                    {% for error in form.full_name.errors %}<p>{{ error }}</p>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            {{ form.phone.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                            {{ form.phone(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200") }}
+                            {% if form.phone.errors %}
+                                <div class="text-red-500 text-sm mt-1">
+                                    {% for error in form.phone.errors %}<p>{{ error }}</p>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="md:col-span-2">
+                            {{ form.password.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                            {{ form.password(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200") }}
+                            {% if form.password.errors %}
+                                <div class="text-red-500 text-sm mt-1">
+                                    {% for error in form.password.errors %}<p>{{ error }}</p>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Information -->
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Business Information</h3>
+                    <div class="space-y-4">
+                        <div>
+                            {{ form.business_name.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                            {{ form.business_name(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200", placeholder="Your business or store name") }}
+                            {% if form.business_name.errors %}
+                                <div class="text-red-500 text-sm mt-1">
+                                    {% for error in form.business_name.errors %}<p>{{ error }}</p>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            {{ form.business_address.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                            {{ form.business_address(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200", rows="3", placeholder="Complete business address including city and postal code") }}
+                            {% if form.business_address.errors %}
+                                <div class="text-red-500 text-sm mt-1">
+                                    {% for error in form.business_address.errors %}<p>{{ error }}</p>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            {{ form.business_phone.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                            {{ form.business_phone(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200", placeholder="Business contact number") }}
+                            {% if form.business_phone.errors %}
+                                <div class="text-red-500 text-sm mt-1">
+                                    {% for error in form.business_phone.errors %}<p>{{ error }}</p>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {{ form.submit(class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2") }}
+            </form>
+
+            <div class="mt-6 text-center">
+                <a href="{{ url_for('register_choice') }}" class="text-purple-600 hover:text-purple-700 text-sm transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to account types
+                </a>
+            </div>
+
+            <!-- Information Box -->
+            <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 class="text-sm font-medium text-blue-800 mb-2">Seller Benefits:</h4>
+                <ul class="text-xs text-blue-700 space-y-1">
+                    <li>• Reach thousands of fitness enthusiasts</li>
+                    <li>• Easy product management and inventory tracking</li>
+                    <li>• Secure payment processing and order management</li>
+                    <li>• Your account will need admin approval before you can start selling</li>
+                    <li>• You can add products and manage orders from your dashboard</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

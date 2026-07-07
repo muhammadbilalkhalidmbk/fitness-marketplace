@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+
+{% block title %}Trainers - FitHub{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Expert Trainers</h1>
+                    <p class="text-gray-600 mt-1">Book sessions with certified fitness professionals</p>
+                </div>
+                <a href="{{ url_for('customer_dashboard') }}" class="text-gray-600 hover:text-gray-900 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Access Status -->
+        <div class="bg-green-50 border border-green-200 rounded-xl p-6 mb-8">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-green-800">Book Any Trainer</h3>
+                    <p class="text-green-700">Your subscription allows you to book sessions with any of our {{ trainers|length }} certified trainers</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trainers Grid -->
+        {% if trainers %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for trainer in trainers %}
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+                <!-- Trainer Photo -->
+                <div class="h-64 bg-gradient-to-r from-green-500 to-blue-600 flex items-center justify-center relative">
+                    {% if trainer.image_filename %}
+                        <img src="{{ url_for('static', filename='uploads/' + trainer.image_filename) }}" alt="{{ trainer.user.full_name }}" class="w-full h-full object-cover">
+                    {% else %}
+                        <i class="fas fa-user text-6xl text-white"></i>
+                    {% endif %}
+                    <div class="absolute top-4 right-4">
+                        <span class="bg-{{ 'green' if trainer.availability == 'both' else 'blue' if trainer.availability == 'online' else 'purple' }}-500 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                            {{ trainer.availability.replace('_', ' ').title() }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Trainer Info -->
+                <div class="p-6">
+                    <div class="text-center mb-4">
+                        <h3 class="text-xl font-bold text-gray-900 mb-1">{{ trainer.user.full_name }}</h3>
+                        <p class="text-green-600 font-medium">{{ trainer.specialization }}</p>
+                        <div class="flex items-center justify-center text-sm text-gray-600 mt-2">
+                            <i class="fas fa-medal mr-2"></i>
+                            <span>{{ trainer.experience_years }} years experience</span>
+                        </div>
+                    </div>
+
+                    <!-- Gym Info -->
+                    <div class="flex items-center text-sm text-gray-600 mb-3">
+                        <i class="fas fa-building mr-2 text-blue-500"></i>
+                        <span>{{ trainer.gym.name if trainer.gym else 'Multiple locations' }}</span>
+                    </div>
+
+                    <!-- Rate -->
+                    <div class="flex items-center justify-center text-lg font-bold text-green-600 mb-4">
+                        <i class="fas fa-dollar-sign mr-1"></i>
+                        <span>{{ trainer.hourly_rate | currency }} /hour</span>
+                    </div>
+
+                    <!-- Bio Preview -->
+                    <div class="text-sm text-gray-600 mb-4">
+                        <p>{{ trainer.bio[:100] }}...</p>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex space-x-3">
+                        <button onclick="showTrainerProfile({{ trainer.id }})" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-center">
+                            <i class="fas fa-user mr-2"></i>View Profile
+                        </button>
+                        <button onclick="bookTrainer({{ trainer.id }})" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-center">
+                            <i class="fas fa-calendar-plus mr-2"></i>Book Session
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <i class="fas fa-user-tie text-4xl text-gray-400 mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No trainers available</h3>
+            <p class="text-gray-600">Check back soon for new trainers joining our platform.</p>
+        </div>
+        {% endif %}
+
+        <!-- Benefits Section -->
+        <div class="bg-white rounded-xl shadow-lg p-8 mt-12">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Why Train with Our Experts?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-certificate text-2xl text-green-600"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Certified Professionals</h3>
+                    <p class="text-gray-600">All trainers are certified and have extensive experience</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-user-cog text-2xl text-blue-600"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Personalized Training</h3>
+                    <p class="text-gray-600">Customized workout plans tailored to your goals</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-laptop text-2xl text-purple-600"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Flexible Options</h3>
+                    <p class="text-gray-600">Choose from online, in-person, or hybrid training sessions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Trainer Profile Modal -->
+<div id="trainerProfileModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Trainer Profile</h3>
+                    <button onclick="hideTrainerProfile()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="trainerProfileContent">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Booking Modal -->
+<div id="bookingModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Book Training Session</h3>
+                    <button onclick="hideBookingModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="bookingFormContent">
+                    <!-- Form will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Store trainer data for modals
+const trainersData = {
+    {% for trainer in trainers %}
+    "{{ trainer.id }}": {
+        name: {{ trainer.user.full_name|tojson }},
+        email: {{ trainer.user.email|tojson }},
+        phone: {{ (trainer.user.phone or 'Not provided')|tojson }},
+        specialization: {{ trainer.specialization|tojson }},
+        experience: {{ trainer.experience_years|tojson }},
+        bio: {{ trainer.bio|tojson }},
+        rate: {{ trainer.hourly_rate|tojson }},
+        availability: {{ trainer.availability.title()|tojson }},
+        gym: {{ (trainer.gym.name if trainer.gym else 'Multiple locations')|tojson }},
+        imageFilename: {{ (trainer.image_filename or '')|tojson }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+};
+
+function showTrainerProfile(trainerId) {
+    const trainer = trainersData[trainerId];
+    if (!trainer) return;
+
+    const content = `
+        <div class="space-y-6">
+            <div class="text-center">
+                ${trainer.imageFilename ? 
+                    `<img src="/static/uploads/${trainer.imageFilename}" alt="${trainer.name}" class="w-32 h-32 rounded-full object-cover mx-auto mb-4">` : 
+                    `<div class="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-user text-4xl text-green-600"></i>
+                    </div>`
+                }
+                <h4 class="text-2xl font-bold text-gray-900">${trainer.name}</h4>
+                <p class="text-green-600 font-medium text-lg">${trainer.specialization}</p>
+                <p class="text-gray-600">${trainer.experience} years of experience</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Rate</label>
+                    <p class="text-lg font-bold text-green-600">PKR ${trainer.rate.toLocaleString()}.00 /hour</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Availability</label>
+                    <p class="text-sm text-gray-900">${trainer.availability}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                    <p class="text-sm text-gray-900">${trainer.gym}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+                    <p class="text-sm text-gray-900">${trainer.phone}</p>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">About</label>
+                <p class="text-sm text-gray-900">${trainer.bio}</p>
+            </div>
+
+            <div class="flex space-x-4 pt-4">
+                <button onclick="bookTrainer(${trainerId})" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    <i class="fas fa-calendar-plus mr-2"></i>Book Session
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('trainerProfileContent').innerHTML = content;
+    document.getElementById('trainerProfileModal').classList.remove('hidden');
+}
+
+function hideTrainerProfile() {
+    document.getElementById('trainerProfileModal').classList.add('hidden');
+}
+
+
+function bookTrainer(trainerId) {
+const trainer = trainersData[trainerId];
+if (!trainer) return;
+const csrfToken = "{{ csrf_token }}";  // ✅ Use passed variable
+  // Injected by Jinja
+
+const content = `
+    <form action="/customer/book_trainer/${trainerId}" method="POST" class="space-y-4">
+        <input type="hidden" name="csrf_token" value="${csrfToken}">
+        
+        <div class="text-center mb-4">
+            <h4 class="text-lg font-semibold text-gray-900">Book Session with ${trainer.name}</h4>
+            <p class="text-green-600">${trainer.specialization}</p>
+            <p class="text-sm text-gray-600">Rate: PKR ${trainer.rate.toLocaleString()}.00 /hour</p>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Session Date & Time</label>
+            <input type="datetime-local" name="session_date" required 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+            <p class="text-xs text-gray-500 mt-1">Please use format: YYYY-MM-DD HH:MM</p>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Duration (Hours)</label>
+            <select name="duration_hours" required 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                <option value="1">1 Hour - PKR ${trainer.rate.toLocaleString()}.00</option>
+                <option value="2">2 Hours - PKR ${(trainer.rate * 2).toLocaleString()}.00</option>
+                <option value="3">3 Hours - PKR ${(trainer.rate * 3).toLocaleString()}.00</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Special Notes (Optional)</label>
+            <textarea name="notes" rows="3" 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="Any specific requirements or goals for the session..."></textarea>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <h5 class="font-medium text-gray-900 mb-2">Session Details:</h5>
+            <ul class="text-sm text-gray-600 space-y-1">
+                <li>• Trainer: ${trainer.name}</li>
+                <li>• Specialization: ${trainer.specialization}</li>
+                <li>• Location: ${trainer.gym}</li>
+                <li>• Availability: ${trainer.availability}</li>
+            </ul>
+        </div>
+
+        <div class="flex space-x-4 pt-4">
+            <button type="button" onclick="hideBookingModal()" 
+                    class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg transition-colors">
+                Cancel
+            </button>
+            <button type="submit" 
+                    class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                <i class="fas fa-check mr-2"></i>Confirm Booking
+            </button>
+        </div>
+    </form>
+`;
+
+
+    document.getElementById('bookingFormContent').innerHTML = content;
+    document.getElementById('bookingModal').classList.remove('hidden');
+}
+
+function hideBookingModal() {
+    document.getElementById('bookingModal').classList.add('hidden');
+}
+</script>
+{% endblock %}

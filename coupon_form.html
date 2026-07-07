@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Create Coupon - Admin{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Create New Coupon</h1>
+                    <p class="text-gray-600 mt-1">Set up a discount coupon for customers</p>
+                </div>
+                <a href="{{ url_for('admin_coupons') }}" class="text-gray-600 hover:text-gray-900 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Coupons
+                </a>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white rounded-xl shadow-lg p-8">
+            <form method="POST" class="space-y-6">
+                {{ form.hidden_tag() }}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Coupon Code -->
+                    <div class="md:col-span-2">
+                        {{ form.code.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                        {{ form.code(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200", placeholder="e.g., SAVE20, WELCOME10") }}
+                        {% if form.code.errors %}
+                            <div class="text-red-500 text-sm mt-1">
+                                {% for error in form.code.errors %}<p>{{ error }}</p>{% endfor %}
+                            </div>
+                        {% endif %}
+                        <p class="text-xs text-gray-500 mt-1">Coupon code will be automatically converted to uppercase</p>
+                    </div>
+
+                    <!-- Discount Percentage -->
+                    <div>
+                        {{ form.discount_percentage.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                        {{ form.discount_percentage(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200", placeholder="e.g., 10") }}
+                        {% if form.discount_percentage.errors %}
+                            <div class="text-red-500 text-sm mt-1">
+                                {% for error in form.discount_percentage.errors %}<p>{{ error }}</p>{% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Max Discount Amount -->
+                    <div>
+                        {{ form.max_discount_amount.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                        {{ form.max_discount_amount(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200", placeholder="e.g., 1000") }}
+                        {% if form.max_discount_amount.errors %}
+                            <div class="text-red-500 text-sm mt-1">
+                                {% for error in form.max_discount_amount.errors %}<p>{{ error }}</p>{% endfor %}
+                            </div>
+                        {% endif %}
+                        <p class="text-xs text-gray-500 mt-1">Optional: Maximum discount amount in PKR</p>
+                    </div>
+
+                    <!-- Minimum Order Amount -->
+                    <div>
+                        {{ form.min_order_amount.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                        {{ form.min_order_amount(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200", placeholder="e.g., 500") }}
+                        {% if form.min_order_amount.errors %}
+                            <div class="text-red-500 text-sm mt-1">
+                                {% for error in form.min_order_amount.errors %}<p>{{ error }}</p>{% endfor %}
+                            </div>
+                        {% endif %}
+                        <p class="text-xs text-gray-500 mt-1">Minimum order amount required to use this coupon</p>
+                    </div>
+
+                    <!-- Usage Limit -->
+                    <div>
+                        {{ form.usage_limit.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                        {{ form.usage_limit(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200", placeholder="e.g., 100") }}
+                        {% if form.usage_limit.errors %}
+                            <div class="text-red-500 text-sm mt-1">
+                                {% for error in form.usage_limit.errors %}<p>{{ error }}</p>{% endfor %}
+                            </div>
+                        {% endif %}
+                        <p class="text-xs text-gray-500 mt-1">Optional: Maximum number of times this coupon can be used</p>
+                    </div>
+
+                    <!-- Valid Until -->
+                    <div class="md:col-span-2">
+                        {{ form.valid_until.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                        {{ form.valid_until(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200", placeholder="YYYY-MM-DD HH:MM:SS") }}
+                        {% if form.valid_until.errors %}
+                            <div class="text-red-500 text-sm mt-1">
+                                {% for error in form.valid_until.errors %}<p>{{ error }}</p>{% endfor %}
+                            </div>
+                        {% endif %}
+                        <p class="text-xs text-gray-500 mt-1">Optional: Expiry date for the coupon (format: YYYY-MM-DD HH:MM:SS)</p>
+                    </div>
+                </div>
+
+                <!-- Example Section -->
+                <div class="bg-blue-50 p-6 rounded-lg">
+                    <h3 class="text-lg font-semibold text-blue-900 mb-3">
+                        <i class="fas fa-lightbulb mr-2"></i>Coupon Preview
+                    </h3>
+                    <div class="bg-white p-4 rounded-lg border-2 border-dashed border-blue-200">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-blue-600 mb-2" id="coupon-code-preview">COUPON CODE</div>
+                            <div class="text-lg text-gray-700 mb-2">
+                                Get <span id="discount-preview" class="font-bold text-green-600">XX%</span> off your order
+                            </div>
+                            <div class="text-sm text-gray-600">
+                                <span id="min-order-preview">Minimum order: PKR 0</span>
+                                <span id="max-discount-preview" class="ml-4"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end space-x-4">
+                    <a href="{{ url_for('admin_coupons') }}" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </a>
+                    {{ form.submit(class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Live preview updates
+document.addEventListener('DOMContentLoaded', function() {
+    const codeInput = document.getElementById('code');
+    const discountInput = document.getElementById('discount_percentage');
+    const minOrderInput = document.getElementById('min_order_amount');
+    const maxDiscountInput = document.getElementById('max_discount_amount');
+    
+    const codePreview = document.getElementById('coupon-code-preview');
+    const discountPreview = document.getElementById('discount-preview');
+    const minOrderPreview = document.getElementById('min-order-preview');
+    const maxDiscountPreview = document.getElementById('max-discount-preview');
+    
+    function updatePreview() {
+        if (codeInput.value) {
+            codePreview.textContent = codeInput.value.toUpperCase();
+        } else {
+            codePreview.textContent = 'COUPON CODE';
+        }
+        
+        if (discountInput.value) {
+            discountPreview.textContent = discountInput.value + '%';
+        } else {
+            discountPreview.textContent = 'XX%';
+        }
+        
+        if (minOrderInput.value) {
+            minOrderPreview.textContent = 'Minimum order: PKR ' + minOrderInput.value;
+        } else {
+            minOrderPreview.textContent = 'Minimum order: PKR 0';
+        }
+        
+        if (maxDiscountInput.value) {
+            maxDiscountPreview.textContent = 'Max discount: PKR ' + maxDiscountInput.value;
+        } else {
+            maxDiscountPreview.textContent = '';
+        }
+    }
+    
+    [codeInput, discountInput, minOrderInput, maxDiscountInput].forEach(input => {
+        if (input) {
+            input.addEventListener('input', updatePreview);
+        }
+    });
+    
+    updatePreview();
+});
+</script>
+{% endblock %}

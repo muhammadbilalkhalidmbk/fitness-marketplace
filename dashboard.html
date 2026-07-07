@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}Trainer Dashboard - FitHub{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Trainer Dashboard</h1>
+                    <p class="text-gray-600 mt-1">Manage your profile and bookings</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <p class="text-sm text-gray-500">Welcome back,</p>
+                        <p class="font-semibold text-gray-900">{{ current_user.full_name }}</p>
+                    </div>
+                    <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                        {% if trainer.image_filename %}
+                            <img src="{{ url_for('static', filename='uploads/' + trainer.image_filename) }}" alt="{{ current_user.full_name }}" class="w-10 h-10 rounded-full object-cover">
+                        {% else %}
+                            <i class="fas fa-user-tie text-white"></i>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Approval Status -->
+        {% if not trainer.is_approved %}
+        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-8">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-yellow-800">Pending Approval</h3>
+                    <p class="text-yellow-700">Your trainer profile is pending admin approval. You'll be able to receive bookings once approved.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-calendar-check text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Bookings</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ bookings|length }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Completed Sessions</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ bookings | selectattr('status', 'equalto', 'completed') | list | length }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-dollar-sign text-yellow-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Hourly Rate</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ trainer.hourly_rate | currency }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-star text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Experience</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ trainer.experience_years }}y</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Profile Information -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-gray-900">Profile Information</h2>
+                    <button onclick="toggleEditProfile()" class="text-blue-600 hover:text-blue-800 transition-colors">
+                        <i class="fas fa-edit mr-2"></i>Edit Profile
+                    </button>
+                </div>
+
+                <div id="profileDisplay" class="space-y-4">
+                    <div class="text-center mb-6">
+                        {% if trainer.image_filename %}
+                            <img src="{{ url_for('static', filename='uploads/' + trainer.image_filename) }}" alt="{{ current_user.full_name }}" class="w-24 h-24 rounded-full object-cover mx-auto mb-4">
+                        {% else %}
+                            <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-user text-3xl text-green-600"></i>
+                            </div>
+                        {% endif %}
+                        <h3 class="text-lg font-semibold text-gray-900">{{ current_user.full_name }}</h3>
+                        <p class="text-green-600 font-medium">{{ trainer.specialization }}</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">Email</label>
+                            <p class="text-sm text-gray-900">{{ current_user.email }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">Phone</label>
+                            <p class="text-sm text-gray-900">{{ current_user.phone or 'Not provided' }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">Experience</label>
+                            <p class="text-sm text-gray-900">{{ trainer.experience_years }} years</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">Availability</label>
+                            <p class="text-sm text-gray-900">{{ trainer.availability.title() }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">Gym</label>
+                            <p class="text-sm text-gray-900">{{ trainer.gym.name if trainer.gym else 'Not assigned' }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">Rate</label>
+                            <p class="text-sm text-gray-900">{{ trainer.hourly_rate | currency }}/hour</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">Bio</label>
+                        <p class="text-sm text-gray-900">{{ trainer.bio }}</p>
+                    </div>
+                </div>
+
+                <!-- Edit Profile Form (Hidden by default) -->
+                <div id="profileEdit" class="hidden">
+                    <form method="POST" enctype="multipart/form-data" class="space-y-4">
+                        <div class="text-center mb-4">
+                            <input type="file" name="profile_image" id="profileImage" class="hidden" accept="image/*">
+                            <label for="profileImage" class="cursor-pointer">
+                                {% if trainer.image_filename %}
+                                    <img src="{{ url_for('static', filename='uploads/' + trainer.image_filename) }}" alt="{{ current_user.full_name }}" class="w-24 h-24 rounded-full object-cover mx-auto mb-2 hover:opacity-75 transition-opacity">
+                                {% else %}
+                                    <div class="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2 hover:bg-green-200 transition-colors">
+                                        <i class="fas fa-camera text-green-600"></i>
+                                    </div>
+                                {% endif %}
+                                <p class="text-xs text-gray-500">Click to change photo</p>
+                            </label>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
+                                <input type="text" name="specialization" value="{{ trainer.specialization }}" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Experience (years)</label>
+                                <input type="number" name="experience_years" value="{{ trainer.experience_years }}" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Hourly Rate (PKR)</label>
+                                <input type="number" name="hourly_rate" value="{{ trainer.hourly_rate }}" step="0.01"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Availability</label>
+                                <select name="availability" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                                    <option value="online" {{ 'selected' if trainer.availability == 'online' }}>Online Only</option>
+                                    <option value="in-person" {{ 'selected' if trainer.availability == 'in-person' }}>In-Person Only</option>
+                                    <option value="both" {{ 'selected' if trainer.availability == 'both' }}>Both</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+                            <textarea name="bio" rows="4" 
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">{{ trainer.bio }}</textarea>
+                        </div>
+
+                        <div class="flex space-x-4">
+                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                Save Changes
+                            </button>
+                            <button type="button" onclick="cancelEditProfile()" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg transition-colors">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Recent Bookings -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-gray-900">Recent Bookings</h2>
+                    <span class="text-sm text-gray-500">{{ bookings|length }} total</span>
+                </div>
+
+                {% if bookings %}
+                <div class="space-y-4 max-h-96 overflow-y-auto">
+                    {% for booking in bookings[:10] %}
+                    <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-900">{{ booking.user.full_name or booking.user.username }}</h4>
+                                    <p class="text-xs text-gray-500">{{ booking.user.email }}</p>
+                                </div>
+                            </div>
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                {% if booking.status == 'confirmed' %}bg-green-100 text-green-800
+                                {% elif booking.status == 'completed' %}bg-blue-100 text-blue-800
+                                {% elif booking.status == 'cancelled' %}bg-red-100 text-red-800
+                                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                {{ booking.status.title() }}
+                            </span>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                            <div>
+                                <i class="fas fa-calendar mr-2"></i>
+                                {{ booking.session_date.strftime('%b %d, %Y') }}
+                            </div>
+                            <div>
+                                <i class="fas fa-clock mr-2"></i>
+                                {{ booking.session_date.strftime('%I:%M %p') }}
+                            </div>
+                            <div>
+                                <i class="fas fa-hourglass-half mr-2"></i>
+                                {{ booking.duration_hours }}h session
+                            </div>
+                            <div>
+                                <i class="fas fa-dollar-sign mr-2"></i>
+                                {{ booking.total_cost | currency }}
+                            </div>
+                        </div>
+
+                        {% if booking.notes %}
+                        <div class="mt-2 pt-2 border-t border-gray-100">
+                            <p class="text-xs text-gray-600"><strong>Notes:</strong> {{ booking.notes }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-12">
+                    <i class="fas fa-calendar text-4xl text-gray-400 mb-4"></i>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No bookings yet</h3>
+                    <p class="text-gray-600">
+                        {% if trainer.is_approved %}
+                            Your bookings will appear here when customers book sessions with you.
+                        {% else %}
+                            Once your profile is approved, customers will be able to book sessions with you.
+                        {% endif %}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Upcoming Sessions -->
+        {% if bookings %}
+        {% set upcoming_bookings = bookings | selectattr('session_date', 'gt', moment().utcnow()) | list %}
+        {% if upcoming_bookings %}
+        <div class="bg-white rounded-xl shadow-lg p-6 mt-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-6">Upcoming Sessions</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for booking in upcoming_bookings[:6] %}
+                <div class="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="font-medium text-gray-900">{{ booking.user.full_name or booking.user.username }}</h4>
+                        <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">{{ booking.status.title() }}</span>
+                    </div>
+                    <div class="space-y-2 text-sm text-gray-600">
+                        <div class="flex items-center">
+                            <i class="fas fa-calendar w-4 mr-2"></i>
+                            {{ booking.session_date.strftime('%A, %b %d, %Y') }}
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-clock w-4 mr-2"></i>
+                            {{ booking.session_date.strftime('%I:%M %p') }} ({{ booking.duration_hours }}h)
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-dollar-sign w-4 mr-2"></i>
+                            {{ booking.total_cost | currency }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleEditProfile() {
+    document.getElementById('profileDisplay').classList.add('hidden');
+    document.getElementById('profileEdit').classList.remove('hidden');
+}
+
+function cancelEditProfile() {
+    document.getElementById('profileDisplay').classList.remove('hidden');
+    document.getElementById('profileEdit').classList.add('hidden');
+}
+</script>
+{% endblock %}

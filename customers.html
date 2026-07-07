@@ -1,0 +1,441 @@
+{% extends "base.html" %}
+
+{% block title %}View Customers - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Customer Management</h1>
+                    <p class="text-gray-600 mt-1">Monitor customer accounts and subscriptions</p>
+                </div>
+                <a href="{{ url_for('admin_dashboard') }}" class="text-gray-600 hover:text-gray-900 transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Customers List -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900">All Customers ({{ customers|length }})</h2>
+            </div>
+
+            {% if customers %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscription</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orders</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for customer in customers %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-12 w-12">
+                                        <div class="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-user text-blue-600"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ customer.full_name or customer.username }}</div>
+                                        <div class="text-sm text-gray-500">{{ customer.username }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ customer.email }}</div>
+                                <div class="text-sm text-gray-500">{{ customer.phone or 'No phone' }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if customer.has_active_subscription() %}
+                                    {% set active_sub = (customer.subscriptions | selectattr('is_paid') | selectattr('end_date', 'gt', now) | list | first) %}
+
+                                    {% if active_sub %}
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                            {{ active_sub.plan.name }}
+                                        </span>
+                                        <div class="text-xs text-gray-500 mt-1">
+                                            Expires: {{ active_sub.end_date.strftime('%b %d, %Y') }}
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                        No Subscription
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ customer.orders|length }} orders
+                                {% if customer.orders %}
+                                    {% set total_spent = customer.orders | sum(attribute='total_amount') %}
+                                    <div class="text-xs text-gray-500">{{ total_spent | currency }} spent</div>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ customer.created_at.strftime('%b %d, %Y') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if customer.is_active %}
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                        Active
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                        Inactive
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-2">
+                                    <button onclick="showCustomerDetails({{ customer.id }})" 
+                                            class="text-blue-600 hover:text-blue-900 transition-colors">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button onclick="showCustomerOrders({{ customer.id }})" 
+                                            class="text-purple-600 hover:text-purple-900 transition-colors">
+                                        <i class="fas fa-shopping-bag"></i>
+                                    </button>
+                                    <button onclick="showCustomerBookings({{ customer.id }})" 
+                                            class="text-green-600 hover:text-green-900 transition-colors">
+                                        <i class="fas fa-calendar"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <i class="fas fa-users text-4xl text-gray-400 mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No customers found</h3>
+                <p class="text-gray-600">Customers will appear here when they register on the platform.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if customers %}
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-crown text-green-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">With Subscriptions</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ customers | selectattr('subscriptions') | list | length }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-shopping-cart text-blue-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">With Orders</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ customers | selectattr('orders') | list | length }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-calendar text-purple-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">With Bookings</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ customers | selectattr('bookings') | list | length }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-ban text-red-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Inactive</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ customers | rejectattr('is_active') | list | length }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Customer Details Modal -->
+<div id="customerModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Customer Details</h3>
+                    <button onclick="hideModal('customerModal')" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="customerDetailsContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Orders Modal -->
+<div id="customerOrdersModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Customer Orders</h3>
+                    <button onclick="hideModal('customerOrdersModal')" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="customerOrdersContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Bookings Modal -->
+<div id="customerBookingsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+        </div>
+
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900">Customer Bookings</h3>
+                    <button onclick="hideModal('customerBookingsModal')" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="customerBookingsContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Store customer data for modals
+const customersData = {
+    {% for customer in customers %}
+    {{ customer.id }}: {
+        name: "{{ customer.full_name or customer.username }}",
+        username: "{{ customer.username }}",
+        email: "{{ customer.email }}",
+        phone: "{{ customer.phone or 'Not provided' }}",
+        joinDate: "{{ customer.created_at.strftime('%b %d, %Y') }}",
+        active: {{ customer.is_active | tojson }},
+        orders: [
+            {% for order in customer.orders %}
+            {
+                id: {{ order.id }},
+                total: "{{ order.total_amount | currency }}",
+                status: "{{ order.status.title() }}",
+                date: "{{ order.created_at.strftime('%b %d, %Y') }}",
+                items: {{ order.items|length }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        bookings: [
+            {% for booking in customer.bookings %}
+            {
+                id: {{ booking.id }},
+                trainer: "{{ booking.trainer.user.full_name }}",
+                date: "{{ booking.session_date.strftime('%b %d, %Y %I:%M %p') }}",
+                duration: {{ booking.duration_hours }},
+                cost: "{{ booking.total_cost | currency }}",
+                status: "{{ booking.status.title() }}"
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        subscriptions: [
+            {% for sub in customer.subscriptions %}
+            {
+                plan: "{{ sub.plan.name }}",
+                startDate: "{{ sub.start_date.strftime('%b %d, %Y') }}",
+                endDate: "{{ sub.end_date.strftime('%b %d, %Y') }}",
+                active: {{ sub.is_active() | tojson }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]
+    },
+    {% endfor %}
+};
+
+function showCustomerDetails(customerId) {
+    const customer = customersData[customerId];
+    if (!customer) return;
+
+    const content = `
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                <p class="text-sm text-gray-900">${customer.name}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Username</label>
+                <p class="text-sm text-gray-900">${customer.username}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Email</label>
+                <p class="text-sm text-gray-900">${customer.email}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Phone</label>
+                <p class="text-sm text-gray-900">${customer.phone}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Join Date</label>
+                <p class="text-sm text-gray-900">${customer.joinDate}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Status</label>
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${customer.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                    ${customer.active ? 'Active' : 'Inactive'}
+                </span>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Active Subscriptions</label>
+                ${customer.subscriptions.filter(sub => sub.active).length > 0 ? 
+                    customer.subscriptions.filter(sub => sub.active).map(sub => 
+                        `<div class="text-sm text-gray-900">${sub.plan} (expires ${sub.endDate})</div>`
+                    ).join('') : 
+                    '<p class="text-sm text-gray-500">No active subscriptions</p>'
+                }
+            </div>
+        </div>
+    `;
+
+    document.getElementById('customerDetailsContent').innerHTML = content;
+    document.getElementById('customerModal').classList.remove('hidden');
+}
+
+function showCustomerOrders(customerId) {
+    const customer = customersData[customerId];
+    if (!customer) return;
+
+    let content = `
+        <div class="mb-4">
+            <h4 class="font-medium text-gray-900">${customer.name}'s Orders</h4>
+            <p class="text-sm text-gray-600">${customer.orders.length} order(s)</p>
+        </div>
+    `;
+
+    if (customer.orders.length > 0) {
+        content += `
+            <div class="space-y-3 max-h-64 overflow-y-auto">
+                ${customer.orders.map(order => `
+                    <div class="border border-gray-200 rounded-lg p-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-medium text-gray-900">Order #${order.id}</span>
+                            <span class="text-sm font-semibold text-green-600">${order.total}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm text-gray-600">
+                            <span>${order.date}</span>
+                            <span>${order.items} item(s)</span>
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                ${order.status}
+                            </span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } else {
+        content += `
+            <div class="text-center py-8">
+                <i class="fas fa-shopping-bag text-2xl text-gray-400 mb-2"></i>
+                <p class="text-gray-600">No orders placed yet</p>
+            </div>
+        `;
+    }
+
+    document.getElementById('customerOrdersContent').innerHTML = content;
+    document.getElementById('customerOrdersModal').classList.remove('hidden');
+}
+
+function showCustomerBookings(customerId) {
+    const customer = customersData[customerId];
+    if (!customer) return;
+
+    let content = `
+        <div class="mb-4">
+            <h4 class="font-medium text-gray-900">${customer.name}'s Bookings</h4>
+            <p class="text-sm text-gray-600">${customer.bookings.length} booking(s)</p>
+        </div>
+    `;
+
+    if (customer.bookings.length > 0) {
+        content += `
+            <div class="space-y-3 max-h-64 overflow-y-auto">
+                ${customer.bookings.map(booking => `
+                    <div class="border border-gray-200 rounded-lg p-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-medium text-gray-900">Booking #${booking.id}</span>
+                            <span class="text-sm font-semibold text-green-600">${booking.cost}</span>
+                        </div>
+                        <div class="text-sm text-gray-600 mb-1">
+                            <span class="font-medium">Trainer:</span> ${booking.trainer}
+                        </div>
+                        <div class="flex items-center justify-between text-sm text-gray-600">
+                            <span>${booking.date}</span>
+                            <span>${booking.duration}h session</span>
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                ${booking.status}
+                            </span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    } else {
+        content += `
+            <div class="text-center py-8">
+                <i class="fas fa-calendar text-2xl text-gray-400 mb-2"></i>
+                <p class="text-gray-600">No trainer sessions booked yet</p>
+            </div>
+        `;
+    }
+
+    document.getElementById('customerBookingsContent').innerHTML = content;
+    document.getElementById('customerBookingsModal').classList.remove('hidden');
+}
+
+function hideModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+}
+</script>
+{% endblock %}
